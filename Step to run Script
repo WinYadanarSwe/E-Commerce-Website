@@ -1,0 +1,11 @@
+Run the VPC & Subnet Setup
+#python create_vpc.py
+
+Run ECS Auto Scaling Setup
+#python create_ecs_autoscaling.py
+
+Run RDS Read Replica Setup
+#python create_rds_read_replica.py
+
+Run Main Script
+#python main.py
