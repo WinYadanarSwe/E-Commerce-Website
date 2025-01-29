@@ -1,0 +1,42 @@
+Scability
+Component          Type                                 Autoscaling Metric                  Scaling Limits
+Frontend ECS       t3.large (2 vCPUs, 8GB RAM)          ALB Request Count > 2000            Min:2 , Max:6
+Backend ECS        m5.large (2 vCPUs, 8GB RAM)          CPU Utilization > 70%               Min:2 , Max:5
+RDS                db.m5.large                          Read Replicas                       Min:1 , Max:3
+
+VPC and subnet
+VPC Name     CIDR Block 
+prod-vpc     10.10.0.0/16
+Subnet Name                             CIDR Block       Zone      Type
+prod-public-subnet-a                    10.10.1.0/24      a        Public
+prod-public-subnet-b                    10.10.2.0/24      b        Public
+prod-private-ecs-frontend-a             10.10.3.0/24      a        Private
+prod-private-ecs-frontend-b             10.10.4.0/24      b        Private
+prod-private-ecs-backend-a              10.10.5.0/24      a        Private
+prod-private-ecs-backend-b              10.10.6.0/24      b        Private
+prod-private-db-a                       10.10.7.0/24      a        Private
+prod-private-db-b                       10.10.8.0/24      b        Private
+
+Security Groups Rules:
+Component              Port         Protocol   Source                          Reason
+ALB Security Group     80,443       TCP        0.0.0.0/0                       Allow public HTTP & HTTPS traffic
+Frontend ECS SG        3000,443     TCP        ALB Security Group              Restricts access to ALB only
+Backend ECS SG         5000         TCP        Frontend ECS Security Group     Allow only Frontend ECS access
+RDS Security Group     3306         TCP        Backend ECS Security Group      Limits access to Backend ECS only 
+SSH                    22           TCP        Your IP                         Only allow SSH from trusted admin IPs
+
+Network ACLs:
+Rule                      Source                          Destination                 Port    Protocol  Action
+Allow HTTP                0.0.0.0/0                       10.10.1.0/24,10.10.2.0/24   80,443  TCP       Allow 
+Allow ECS Communication   10.10.3.0/24,10.10.4.0/24       10.10.5.0/24,10.10.6.0/24   5000    TCP       Allow 
+Allow DB Access           10.10.5.0/24,10.10.6.0/24       10.10.7.0/24,10.10.8.0/24   3306    TCP       Allow 
+Block Unwanted Traffic    0.0.0.0/0                       All Subnets                 All     TCP       Deny
+
+Route Table:
+Route Table          Attached Subnets                              Routes
+Public Route Table   prod-public-subnet-a,prod-public-subnet-b     0.0.0.0/0 -> IG
+Priate Route Table   All private subnets                           0.0.0.0/0 -> NAT GW
+
+
+
+
